@@ -60,3 +60,7 @@ sessioninfo::session_info(
 <!--     include_base = TRUE -->
 <!-- ) -->
 <!-- ``` -->
+
+## Other information
+
+Header image: iStock / ClaudioVentrella
