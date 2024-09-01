@@ -10,8 +10,6 @@ library(rebook)
 chapterPreamble()
 ```
 
-<div id="workflow">
-
 ::: {#translate}
 <a href="introductory_workflow_french_version.qmd"><img src="figures/flags/France_flag.png" alt="French flag" class="flag"/> **French** </a> <a href="introductory_workflow_dutch_version.qmd"><img src="figures/flags/Netherland_flag.jpg" alt="Netherland flag" class="flag"/> **Dutch** </a>
 :::
@@ -26,12 +24,11 @@ foundational steps of microbiome analysis using _miaverse_. These steps are
 applicable to almost any of your projects and will help you understand the
 fundamental concepts that will skyrocket 🚀 your future microbiome analyses.
 
-In this workflow, we cover:
+In this workflow, we cover basics of:
 
     - Data wrangling and transformations
-    - Basic exploration
-    - Alpha diversity analysis
-    - Beta diversity analysis
+    - Exploration
+    - Alpha and beta diversity
 
 ## Load packages
 
@@ -88,9 +85,9 @@ built-in datasets provided by mia, which you can find here: @sec-example-data.
 In this tutorial, we'll be using the @Tengeler2020 dataset. In the study,
 they explored the impact of altered microbiomes on brain
 structure, specifically comparing patients with ADHD
-(Attention Deficit Hyperactivity Disorder) to controls. See more information
+(Attention Deficit Hyperactivity Disorder) to controls (see more information
 on this dataset from
-[here](https://microbiome.github.io/outreach/tengeler2020_presentation.html#/title-slide).
+[here](https://microbiome.github.io/outreach/tengeler2020_presentation.html#/title-slide)).
 Let's load this dataset into our R environment:
 
 ```{r}
@@ -98,8 +95,6 @@ Let's load this dataset into our R environment:
 data("Tengeler2020", package = "mia")
 tse <- Tengeler2020
 ```
-
-<hr>
 
 ## Subsetting and accessing the data
 
@@ -164,8 +159,6 @@ rd
 
 Here `rowData(tse)` returns a DataFrame with 151 rows and 7 columns. Each
 row represents an organism and each column a taxonomic level.
-
-<hr>
 
 ## Data wrangling
 
@@ -263,7 +256,6 @@ then create a graph to visualize this.
 ```{r}
 #| label: plotColdata
 p <- plotColData(tse, x = "patient_status", y = "faith")
-p <- p + labs(title = "Faith plot")
 p
 ```
 
@@ -273,8 +265,6 @@ Faith's index only tell us about the diversity within individual samples
 and do not account for the differences between samples or groups. To
 understand how microbial communities vary between different samples — for
 instance, between ADHD patients and controls — we need to examine beta diversity.
-
-<hr>
 
 ## Community dissimilarity
 
@@ -313,8 +303,8 @@ tse <- runMDS(
     )
 ```
 
-In order to visualize this newly generated projection, we can apply
-`scater::plotReducedDim()`.
+The results are stored in `reducedDim` slot. In order to visualize this newly
+generated projection, we can apply `scater::plotReducedDim()`.
 
 ```{r}
 #| label: showPCoA
@@ -324,6 +314,7 @@ p <- plotReducedDim(
     colour_by = "patient_status",
     point_size = 3
     )
+p <- p + labs(title = "Principal Coordinate Analysis")
 p
 ```
 
@@ -334,7 +325,3 @@ profiles differ between ADHD patients and controls.
 To further explore the factors driving these differences in microbial profiles,
 we can perform a differential abundance analysis, for instance
 (see [@sec-differential-abundance]).
-
-<hr>
-
-</div>
