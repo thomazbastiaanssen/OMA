@@ -39,7 +39,6 @@ as hierarchical clustering, DBSCAN, and K-means.
 ```{r load_bluster}
 # Load dependencies
 library(bluster)
-library(kableExtra)
 ```
 
 In the examples of this chapter we use *peerj13075* data for
@@ -91,7 +90,7 @@ altExp(tse, "prevalent") <- addCluster(
     altExp(tse, "prevalent"),
     assay.type = "counts",
     by = "cols",
-    HclustParam(method = "ward.D2", dist.fun = vegdist, metric = "bray"),
+    HclustParam(method = "ward.D2", dist.fun = getDissimilarity, metric = "bray"),
     full = TRUE,
     clust.col = "hclust")
 
@@ -128,18 +127,19 @@ altExp(tse, "prevalent") <- addDominant(altExp(tse, "prevalent"))
 labels(dend) <- altExp(tse, "prevalent")$dominant_taxa
 dend <- color_labels(dend, k = k, col = unlist(cols))
 
-# Plot dendrogram
+# Adjust frame for the figure
 par(mar=c(9, 3, 0.5, 0.5))
-dend %>% set("labels_cex", 0.8) %>% plot()
+# Plot dendrogram
+dend |> set("labels_cex", 0.8) |> plot()
 ```
 
 We can also visualize the clusters by projecting the data onto
 two-dimensional
 surface that captures the most variability in the data. In this example, we use
-multi-dimensional scaling (MDS).
+multi-dimensional scaling (MDS) (see [@sec-unsupervised-ordinantion]).
 
 ```{r hclust3}
-library (scater)
+library(scater)
 
 # Add the MDS dimensions for plotting
 altExp(tse, "prevalent") <- runMDS(
@@ -266,26 +266,8 @@ we can plot which taxa define the key cluster features.
 best_model <- metadata(altExp(tse, "prevalent"))$DMM$dmm[2]
 drivers <- as.data.frame(best_model[[1]]@fit$Estimate)
 
-# Clean names
-drivers$class <- rownames(drivers)
-
-for (i in 1:2) {
-  # Transfer to relative to optimize plotting
-  drivers[i] <- drivers[i]/sum(drivers[i])
-
-  drivers <- drivers[order(drivers[[i]], decreasing = TRUE),]
-  p <- ggplot(head(drivers, 5), aes(
-      x = reorder(head(class, 5), + head(drivers[[i]], 5)),
-      y = head(drivers[[i]], 5))) +
-
-      geom_bar(stat = "identity", fill = scales::hue_pal()(1), alpha = 0.6) +
-      coord_flip() +
-      labs(title = paste("Top phyla in group", i)) +
-      theme_minimal(base_size = 11) +
-      labs(x="", y="") +
-      scale_y_continuous(limits=c(0,1))
-  print(p)
-}
+# Plot by utilizng miaViz::plotLoadings
+plotLoadings(as.matrix(drivers), ncomponents = 2)
 ```
 
 As well as in hierarchical clustering, we can also visualize the clusters by
