@@ -5,82 +5,43 @@ library(rebook)
 chapterPreamble()
 ```
 
-Community diversity is a central concept in microbiome research. Several
-diversity indices are available in the ecological literature.
+Alpha diversity, diversity within a sample, is a central concept in microbiome 
+research. In ecological literature, several distinct but related alpha diversity
+indices, often referring to richness, evenness and diversity, are commonly used 
+[@Whittaker1960], [@Willis2019]. The term _alpha diversity_ is often used to 
+collectively refer to all these indices.
 
-The main categories of diversity indices include species richness,
-evenness, and diversity: each of these emphasizes different aspects of
-the community heterogeneity [@Whittaker1960], [@Willis2019]. The _Hill
-coefficient_ combines many standard indices into a single equation
-that provides observed richness, inverse Simpson, Shannon diversity,
-and generalized diversity as special cases, with varying levels of
-emphasis on species abundance values. Thus, the term _alpha diversity_
-is often used to collectively refer to all these variants.
 
-**Diversity** summarizes the distribution of
-  species abundances in a given sample into a single number that
-  depends on both species richness and evenness (see below). Diversity
-  indices measure the overall community heterogeneity that considers
-  both of these aspects simultaneously. A number of ecological
-  diversity measures are available. In general, diversity increases
-  together with increasing richness and evenness. **Phylogenetic
-  diversity** (PD), [@Faith1992], is a variant that incorporates
-  information from phylogenetic relationships between species, unlike
-  most other commonly used diversity indices. The `addAlpha()`
-  function uses a faster reimplementation of the widely used function
-  in _`picante`_ [@R_picante, @Kembel2010]. The method uses the
-  default rowTree from the `TreeSummarizedExperiment` object (`tse`).
+The majority of alpha diversity indices are closely related, though this is not 
+evident from their names. It is helpful to understand an alpha diversity metric 
+through two factors. First, alpha diversity measures can be defined as special 
+cases of a unifying equation where the _Hill coefficient_ determines whether the
+equation captures richness, inverse Simpson, Shannon diversity or generalized 
+diversity. Secondly, alpha diversity indices vary in whether they are weighed by
+phylogeny [@Faith1992]. The figure below further illustrates this classification 
+using several popular alpha diversity metrics, adapted with permission [@bastiaanssen2023bugs1]. 
 
-**Richness** refers to the total number of species in a community
-  (sample). The simplest richness index is the number of species
-  observed in a sample (observed richness). Assuming limited sampling
-  from the community, however, this may underestimate the true species
-  richness. Several estimators have been developed to address this,
-  including for instance ACE [@Chao1992] and Chao1 [@Chao1984]
-  indices. Richness estimates do not aim to characterize variations in
-  species abundances.
-  
-Nonparametric richness estimators such as Chao1 and ACE, however, must not be 
-used with amplicon sequence variant (ASV) data. Algorithms that generate ASVs, 
-like DADA2 and Deblur, typically remove singletons, which are essential for 
-these richness calculations. This removal leads to meaningless results. 
-Although ASVs offer higher resolution than operational taxonomic units (OTUs) 
-and are increasingly used, the removal of singletons invalidates the application 
-of Chao1 and ACE. Therefore, alternative alpha diversity metrics that do not 
-depend on singletons or doubletons should be considered, or OTUs could be 
-used specifically for alpha diversity analysis to retain low-abundance taxa.
-Additionally, the inability of denoising algorithms to distinguish true 
-singleton sequences from artifacts further complicates the issue, making 
-traditional richness estimators unsuitable for ASV datasets, which are often 
-standardized for sequencing depth.[@Deng2024]
+![Alpha Diversity metrics are numerically related and can be classified along two axes. Here, we show Hill coefficient on the x-axis and whether the index considers phylogeny on the y-axis](alpha_diversity_files/figure-html/alpha_div_fig.png) 
 
-**Evenness** focuses on the distribution of species abundances, and it
-  can thus complement the number of species. Pielou's evenness is a
-  commonly used index, obtained by normalizing Shannon diversity by
-  (the natural logarithm of) observed richness.
 
-These main classes of alpha diversity are sometimes complemented with
-indices of dominance or rarity:
 
-**Dominance** indices are in general negatively correlated with alpha
-  diversity. A high dominance is obtained when one or a few species have
-  a high share of the total species abundance in the community. Note
-  that dominance indices are generally inversely correlated with other
-  alpha diversity indices.
+::: {.callout-note}
+## Note: Richness estimators and denoising
 
-**Rarity** indices characterize the concentration of species at low
-  abundance.  Prevalence and detection thresholds determine rare
-  species whose total concentration will determine the value of a
-  rarity index.
+Several estimators have been developed to address the confounding effect of 
+limited sampling size on observed richness, most notably ACE [@Chao1992] and 
+Chao1 [@Chao1984]. Notably, these approaches may yield misleading results for 
+modern 16S data, which commonly features denoising and removal of singletons 
+[@Deng2024]. 
+:::
 
 ## Alpha diversity estimation in practice
 
 ### Calculate diversity measures {#sec-estimate-diversity}
 
-Alpha diversity can be estimated with `addAlpha()` wrapper function that interact
-with other packages implementing the calculation, such as `vegan`
-[@R_vegan].
 
+Alpha diversity can be estimated with the `addAlpha()` function, which interacts
+with other packages implementing the calculation, such as `vegan` [@R_vegan].  
 These functions calculate the given indices, and add them to the
 `colData` slot of the `SummarizedExperiment` object with the given
 `name`.
@@ -148,7 +109,8 @@ pairwise.wilcox.test(
 ### Faith phylogenetic diversity {#sec-faith-diversity}
 
 The Faith index is returned by the function `addAlpha()`. It utilizes the widely
-used function in _`picante`_ [@R_picante, @Kembel2010].
+used function in _`picante`_ [@R_picante, @Kembel2010]. The method uses the 
+default rowTree from the `TreeSummarizedExperiment` object (`tse`).
 
 ```{r phylo-div-1}
 tse <- addAlpha(tse, assay.type = "counts", index = "faith")
@@ -156,7 +118,7 @@ tse$faith |> head()
 ```
 
 ::: {.callout-note}
-## Note
+## Note: Requires phylogenetic tree
 
 Because `tse` is a `TreeSummarizedExperiment` object, its phylogenetic tree is
 used by default. However, the optional argument `tree` must be provided if
