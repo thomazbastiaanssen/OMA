@@ -5,23 +5,33 @@ library(rebook)
 chapterPreamble()
 ```
 
-Alpha diversity, diversity within a sample, is a central concept in microbiome 
+## Background
+
+Alpha diversity, or within-sample diversity, is a central concept in microbiome 
 research. In ecological literature, several distinct but related alpha diversity
 indices, often referring to richness, evenness and diversity, are commonly used 
-[@Whittaker1960], [@Willis2019]. The term _alpha diversity_ is often used to 
+[@Willis2019;@Whittaker1960]. The term _alpha diversity_ is often used to 
 collectively refer to all these indices.
 
+### Applications
 
-The majority of alpha diversity indices are closely related, though this is not 
-evident from their names. It is helpful to understand an alpha diversity metric 
-through two factors. First, alpha diversity measures can be defined as special 
-cases of a unifying equation where the _Hill coefficient_ determines whether the
-equation captures richness, inverse Simpson, Shannon diversity or generalized 
-diversity. Secondly, alpha diversity indices vary in whether they are weighed by
-phylogeny [@Faith1992]. The figure below further illustrates this classification 
-using several popular alpha diversity metrics, adapted with permission [@bastiaanssen2023bugs1]. 
+Alpha diversity is predominantly used to quantify complexity in the microbiome. 
+In the general adult population, lower alpha diversity and lower bacterial load 
+have been associated to worse overall physical and mental health [@Valles-Colomer2019GBMs;@vandeputte2017quantitative]. However, this principle 
+may not generalize to other populations, most notably in early life
+and in patient cohorts [@Ma2019].
 
-![Alpha Diversity metrics are numerically related and can be classified along two axes. Here, we show Hill coefficient on the x-axis and whether the index considers phylogeny on the y-axis](alpha_diversity_files/figure-html/alpha_div_fig.png) 
+### Approaches
+
+The majority of alpha diversity metrics are closely related, though this is not 
+evident from their names. Bastiaanssen et al. [-@bastiaanssen2023bugs1] lay out
+this relationship across two factors. First, alpha diversity metrics can be 
+defined as special cases of a unifying equation where the _Hill coefficient_ 
+determines whether the equation captures for instance richness, inverse Simpson 
+or Shannon entropy. Second, some alpha diversity metrics are weighed based on 
+phylogeny, like Faith's PD [-@Faith1992] and PhILR [@Silverman2017]. 
+
+![Alpha Diversity metrics are numerically related and can be classified along two axes. Here, we show Hill coefficient on the x-axis and whether the index considers phylogeny on the y-axis](figures/fig_13_1_alphadiv.png) 
 
 
 
@@ -35,25 +45,15 @@ modern 16S data, which commonly features denoising and removal of singletons
 [@Deng2024]. 
 :::
 
-## Alpha diversity estimation in practice
+## Examples
 
-### Calculate diversity measures {#sec-estimate-diversity}
-
+### Calculate alpha diversity measures {#sec-estimate-diversity}
 
 Alpha diversity can be estimated with the `addAlpha()` function, which interacts
-with other packages implementing the calculation, such as `vegan` [@R_vegan].  
-These functions calculate the given indices, and add them to the
-`colData` slot of the `SummarizedExperiment` object with the given
-`name`.
-
-The estimated values can then be retrieved and analyzed directly from
-the `colData`, for example, by plotting them using `plotColData()` from
-the `scater` package [@R_scater]. Here, we use the `observed`
-species as a measure of richness.
-
-Certain indices have additional options, here observed has `detection` parameter
-that control the detection threshold. Species over this threshold is considered
-as detected. See full list of options from from `help(addAlpha)`.
+with other packages implementing the calculation, such as `vegan` [@R_vegan] and
+_`picante`_ [@R_picante; @Kembel2010]. 
+These functions calculate the given indices, and add them to the `colData` slot 
+of the `SummarizedExperiment` object with the given `name`. 
 
 ```{r plot-richness, message=FALSE, cache=TRUE}
 #| context: setup
@@ -63,26 +63,35 @@ library(mia)
 data("GlobalPatterns", package="mia")
 tse <- GlobalPatterns
 
-# Estimate (observed) richness
+# Compute one or multiple indices simultaneously through the index 'parameter'. 
 tse <- addAlpha(
-    tse, assay.type = "counts", index = "observed", name = "observed",
+    tse, assay.type = "counts", index = c("observed", "shannon", "faith"),
     detection = 10)
 
 # Check some of the first values in colData
 tse$observed |> head()
+tse$shannon  |> head()
 ```
+Certain indices have additional options, here observed has `detection` parameter
+that control the detection threshold. Species over this threshold is considered
+as detected. See full list of options from from `help(addAlpha)`.
 
-::: {.callout-tip}
-## Tip
+::: {.callout-note}
+## Note: Phylogenetic distances require a tree
 
-You can calculate multiple indices simultaneously by specifying multiple indices
-in the `index` parameter.
-
-For example:  `index = c("observed", "shannon")`
+Because `tse` is a `TreeSummarizedExperiment` object, its phylogenetic tree is
+used by default. However, the optional argument `tree` must be provided if `tse` 
+does not contain a rowTree.
 :::
 
-Let's visualize the results against selected `colData` variables (sample
-type and final barcode).
+### Visualize alpha diversity measures {#sec-plot-diversity}
+
+As alpha diversity metrics typically summarize high-dimensional samples into 
+singular values, many visualization approaches are available. Once calculated, 
+these metrics can be analyzed directly from the `colData`, for example, by 
+plotting them using `plotColData()` from the `scater` package [@R_scater]. Here,
+we use the `observed` species as a measure of richness. Let's visualize the 
+results against selected `colData` variables (sample type and final barcode).
 
 ```{r plot-div-obs, message=FALSE, fig.cap="Shannon diversity estimates plotted grouped by sample type with colour-labeled barcode.", cache=TRUE}
 library(scater)
@@ -95,37 +104,7 @@ plotColData(
     labs(x = "Sample types", y = expression(Richness[Observed]))
 ```
 
-We can then analyze the statistical significance. We use the non-parametric
-Wilcoxon or Mann-Whitney test, as it is more flexible than the commonly used
-Student's t-Test, since it does not assume normality.
-
-```{r}
-#| label: test_alpha1
-
-pairwise.wilcox.test(
-    tse[["observed"]], tse[["SampleType"]], p.adjust.method = "fdr")
-```
-
-### Faith phylogenetic diversity {#sec-faith-diversity}
-
-The Faith index is returned by the function `addAlpha()`. It utilizes the widely
-used function in _`picante`_ [@R_picante, @Kembel2010]. The method uses the 
-default rowTree from the `TreeSummarizedExperiment` object (`tse`).
-
-```{r phylo-div-1}
-tse <- addAlpha(tse, assay.type = "counts", index = "faith")
-tse$faith |> head()
-```
-
-::: {.callout-note}
-## Note: Requires phylogenetic tree
-
-Because `tse` is a `TreeSummarizedExperiment` object, its phylogenetic tree is
-used by default. However, the optional argument `tree` must be provided if
-`tse` does not contain one.
-:::
-
-## Alpha diversity measure comparisons {#sec-compare-alpha}
+#### Alpha diversity measure comparisons {#sec-compare-alpha}
 
 We can compare alpha diversities for example by calculating correlation between
 them. Below, a visual comparison between shannon and faith indices is shown
@@ -173,7 +152,20 @@ wrap_plots(plots, ncol = 1) +
   plot_layout(guides = "collect")
 ```
 
-## Visualizing significance in group-wise comparisons
+### Statistical analysis of alpha diversity measures {#sec-stats-diversity}
+
+We can then analyze the statistical significance. We use the non-parametric
+Wilcoxon or Mann-Whitney test, as it is more flexible than the commonly used
+Student's t-Test, since it does not assume normality.
+
+```{r}
+#| label: test_alpha1
+
+pairwise.wilcox.test(
+    tse[["observed"]], tse[["SampleType"]], p.adjust.method = "fdr")
+```
+
+#### Visualizing significance in group-wise comparisons
 
 Next, let's compare the Shannon index between sample groups and visualize the
 statistical significance. Using the `stat_compare_means` function from the
@@ -236,6 +228,7 @@ p <- plotColData(
 p
 ```
 
+## Further reading 
 Article on
 [`ggpubr` package](http://www.sthda.com/english/articles/24-ggpubr-publication-ready-plots/76-add-p-values-and-significance-levels-to-ggplots/)
 provides further examples for estimating and highlighting significances.
