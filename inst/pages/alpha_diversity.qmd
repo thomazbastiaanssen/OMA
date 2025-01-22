@@ -1,4 +1,4 @@
-# Community diversity {#sec-community-diversity}
+# Alpha Diversity {#sec-alpha-diversity}
 
 ```{r setup, echo=FALSE, results="asis"}
 library(rebook)
@@ -9,15 +9,17 @@ chapterPreamble()
 
 Alpha diversity, or within-sample diversity, is a central concept in microbiome 
 research. In ecological literature, several distinct but related alpha diversity
-indices, often referring to richness, evenness and diversity, are commonly used 
-[@Willis2019;@Whittaker1960]. The term _alpha diversity_ is often used to 
-collectively refer to all these indices.
+indices, often referring to **richness** and **evenness** - the number of taxa 
+and how they are distributed, respectively - are commonly used 
+[@Willis2019;@Whittaker1960]. The term **diversity** can be used to collectively 
+refer to all these indices.
 
 ### Applications
 
 Alpha diversity is predominantly used to quantify complexity in the microbiome. 
 In the general adult population, lower alpha diversity and lower bacterial load 
-have been associated to worse overall physical and mental health [@Valles-Colomer2019GBMs;@vandeputte2017quantitative]. However, this principle 
+have been associated to worse overall physical and mental health 
+[@Valles-Colomer2019GBMs;@vandeputte2017quantitative]. However, this principle 
 may not generalize to other populations, most notably in early life
 and in patient cohorts [@Ma2019].
 
@@ -25,15 +27,69 @@ and in patient cohorts [@Ma2019].
 
 The majority of alpha diversity metrics are closely related, though this is not 
 evident from their names. Bastiaanssen et al. [-@bastiaanssen2023bugs1] lay out
-this relationship across two factors. First, alpha diversity metrics can be 
-defined as special cases of a unifying equation where the _Hill coefficient_ 
-determines whether the equation captures for instance richness, inverse Simpson 
-or Shannon entropy. Second, some alpha diversity metrics are weighed based on 
-phylogeny, like Faith's PD [-@Faith1992] and PhILR [@Silverman2017]. 
+this relationship across two factors (See table below); First, alpha diversity 
+metrics can be defined as special cases of a unifying equation of **diversity**, 
+where the **Hill number** determines the specific index captured. Lower Hill 
+numbers favour **richness**, the number of distinct taxa, whereas higher numbers 
+favour **evenness**, how the taxa are distributed over the sample [@Hill1973]. 
+Second, some alpha diversity metrics are weighed based on phylogeny, like 
+Faith's PD [-@Faith1992] and PhILR [@Silverman2017]. 
 
-![Alpha Diversity metrics are numerically related and can be classified along two axes. Here, we show Hill coefficient on the x-axis and whether the index considers phylogeny on the y-axis](figures/fig_13_1_alphadiv.png) 
+```{r, echo=FALSE}
+library(gt)
 
+#Descriptions
+neutral_div <- 
+  "**Neutral Diversity**  
 
+---  
+*Weighs each taxon equally, no assumptions about phylogeny*"
+phyl_div    <- 
+  "**Phylogenetic Diversity**  
+
+---  
+*Indices are scaled based on taxonomic closeness with a phylogenetic tree*"
+
+hill_0 <- 'Dependent on presence and absence of taxa, not abundance'
+hill_1 <- 'Dependent on how evenly taxa are distributed in a sample'
+hill_2 <- 'The probability of two randomly picked taxa not being the same'
+
+table_colnames <- c("phyl_desc", hill_0, hill_1, hill_2)
+
+footnote_md <- md(
+"The equation for general diversity can be defined as follows: 
+   \\${{}^qD = (\\sum_{i=1}^{R}p^q_i})^{\\frac{1}{(1-q)}}\\$,   
+   with *q* = Hill number, *R* = number of features, 
+   *p* = relative feature abundance.")
+
+#Generate data.frame for table
+cbind.data.frame(
+  c(neutral_div,  phyl_div),
+  c("Richness (Chao1)", "Faith's Phylogenetic Diversity"),
+  c("Shannon Entropy","Phylogenetic Entropy"),
+  c("Simpson's Index", "Rao's Quadratic Diversity")) |>  
+  `colnames<-`(value = table_colnames) |> 
+  
+  #Pipe into gt
+  gt(rowname_col = "phyl_desc") |> 
+  fmt_markdown() |>
+  
+  tab_spanner(label = md("**Hill number 0**"), columns = 2) |> 
+  tab_spanner(label = md("**Hill number 1**"), columns = 3) |> 
+  tab_spanner(label = md("**Hill number 2**"), columns = 4) |> 
+  
+  #Formatting
+  cols_align(align = "center") |> 
+  opt_table_lines() |> 
+  tab_style(style     = list(cell_text(v_align = "middle", align = "center")),
+            locations = cells_column_spanners()) |> 
+  tab_style(style     = cell_text(style = "italic"), 
+            locations = cells_column_labels()) |> 
+  tab_style(style     = list(cell_text(weight = "bolder")),
+            locations = cells_body(2:4)) |> 
+  cols_width(1   ~ pct(32.5), 2:4 ~ pct(22.5)) |>
+  tab_footnote(footnote = footnote_md, placement = "left") 
+```
 
 ::: {.callout-note}
 ## Note: Richness estimators and denoising
