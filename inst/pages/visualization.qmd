@@ -177,7 +177,7 @@ plots[[1]] + plots[[2]]
 ```
 
 The analogous output in the form of a violin plot is obtained in
-chapter [@sec-faith-diversity]. In addition, box plots that group
+chapter [@sec-plot-diversity]. In addition, box plots that group
 samples according to certain information, such as origin, sex, age and
 health condition, can be labeled with p-values for significant
 differences with the package `ggpubr` package, as shown in chapter
