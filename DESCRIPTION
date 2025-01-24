@@ -106,11 +106,11 @@ Remotes:
     github::microbiome/mia,
     github::microbiome/miaViz,
     github::microbiome/miaTime,
+    github::joey711/phyloseq,
     github::stefpeschel/NetCoMi,
     github::zdk123/SpiecEasi,
     github::GraceYoon/SPRING,
-    github::himelmallick/IntegratedLearner,
-    github::joey711/phyloseq
+    github::himelmallick/IntegratedLearner
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 BiocType: Book
