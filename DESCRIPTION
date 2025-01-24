@@ -56,7 +56,6 @@ Suggests:
     glue,
     grid,
     gsEasy,
-    gt,
     gtools,
     igraph,
     IntegratedLearner,
